@@ -1,6 +1,7 @@
 import {
   Avatar,
   Box,
+  Button,
   Flex,
   Link,
   Menu,
@@ -13,10 +14,22 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { BsInstagram } from "react-icons/bs";
+import { useRecoilValue } from "recoil";
 import { CgMoreO } from "react-icons/cg";
+import userAtom from "../atoms/userAtom";
+import { Link as RouterLink } from "react-router-dom";
+import { useState } from "react";
+import useShowToast from "../hooks/useShowToast";
 
-const UserHeader = () => {
+const UserHeader = ({ user }) => {
   const toast = useToast();
+  const currentUser = useRecoilValue(userAtom);
+  const [following, setFollowing] = useState(
+    user.followers.includes(currentUser._id)
+  );
+  const [updating, setUpdating] = useState(false);
+  const showToast = useShowToast();
+
   const copyURL = () => {
     const currentURL = window.location.href;
     navigator.clipboard.writeText(currentURL).then(() => {
@@ -29,21 +42,52 @@ const UserHeader = () => {
       });
     });
   };
+  const handleFollowUnfollow = async () => {
+    if (!currentUser) {
+      showToast("Error", "Please log in to follow/unfollow users", "error");
+      return;
+    }
+    if (updating) return;
+    setUpdating(true);
+    try {
+      const res = await fetch(`/api/users/follow/${user._id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (data.error) {
+        showToast("Error", data.error, "error");
+        return;
+      }
+      if (following) {
+        showToast("Success", `Unfollowed ${user._id}`, "success");
+        user.followers.pop();
+      } else {
+        showToast("Success", `Followed ${user._id}`, "success");
+        user.followers.push(currentUser._id);
+      }
+      setFollowing(!following);
+    } catch (error) {
+      showToast("Error", error, "error");
+    } finally {
+      setUpdating(false);
+    }
+  };
   return (
     <VStack gap={4} alignItems={"start"}>
       <Flex justifyContent={"space-between"} w={"full"}>
         <Box>
-          <Text fontSize={"2xl"}>Mark Z</Text>
+          <Text fontSize={"2xl"}>{user.name}</Text>
           <Flex gap={2} alignItems={"center"}>
             <Text fontSize={"sm"} fontWeight={"bold"}>
-              @Mark
+              @{user.username}
             </Text>
           </Flex>
         </Box>
         <Box>
           <Avatar
-            name="Zuck_is_a_cuck"
-            src="/zuck-avatar.png"
+            name={user.name}
+            src={user.profilePic}
             size={{
               base: "md",
               md: "xl",
@@ -51,10 +95,26 @@ const UserHeader = () => {
           />
         </Box>
       </Flex>
-      <Text>Lorem ipsum dolor sit, amet consectetur adipisicing elit.</Text>
+      <Text>{user.bio}</Text>
+      {currentUser._id === user._id && (
+        <Link as={RouterLink} to="/update">
+          <Button size={"sm"}>Update Profile</Button>
+        </Link>
+      )}
+      {currentUser._id !== user._id && (
+        <Link as={RouterLink} to="/update">
+          <Button
+            size={"sm"}
+            onClick={handleFollowUnfollow}
+            isLoading={updating}
+          >
+            {following ? "Unfollow" : "Follow"}
+          </Button>
+        </Link>
+      )}
       <Flex w={"full"} justifyContent={"space-between"}>
         <Flex gap={2} alignItems={"center"}>
-          <Text color={"gray.light"}>69 Followers</Text>
+          <Text color={"gray.light"}>{user.followers.length} Followers</Text>
           <Box w="1" h="1" bg="gray.light" borderRadius={"full"}></Box>
           <Link color={"gray.light"}>instagram.com</Link>
         </Flex>

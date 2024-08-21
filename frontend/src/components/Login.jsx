@@ -1,4 +1,3 @@
-"use client";
 import {
   Flex,
   Box,
@@ -26,6 +25,7 @@ export default function LoginCard() {
   const setAuthScreen = useSetRecoilState(authScreenAtom);
   const setUser = useSetRecoilState(userAtom);
   const [loading, setLoading] = useState(false);
+
   const [inputs, setInputs] = useState({
     username: "",
     password: "",
@@ -34,9 +34,11 @@ export default function LoginCard() {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      const res = await fetch("api/users/login", {
+      const res = await fetch("/api/users/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(inputs),
       });
       const data = await res.json();
@@ -52,7 +54,6 @@ export default function LoginCard() {
       setLoading(false);
     }
   };
-
   return (
     <Flex align={"center"} justify={"center"}>
       <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
@@ -112,7 +113,7 @@ export default function LoginCard() {
             </FormControl>
             <Stack spacing={10} pt={2}>
               <Button
-                loadingText="Submitting"
+                loadingText="Logging in"
                 size="lg"
                 bg={useColorModeValue("gray.600", "gray.700")}
                 color={"white"}
@@ -127,14 +128,12 @@ export default function LoginCard() {
             </Stack>
             <Stack pt={6}>
               <Text align={"center"}>
-                Don&apos;t have an Account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link
                   color={"blue.400"}
-                  onClick={() => {
-                    setAuthScreen("signup");
-                  }}
+                  onClick={() => setAuthScreen("signup")}
                 >
-                  Sign Up
+                  Sign up
                 </Link>
               </Text>
             </Stack>

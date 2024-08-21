@@ -32,7 +32,7 @@ const CreatePost = () => {
   const [postText, setPostText] = useState("");
   const { handleImageChange, imgUrl, setImgUrl } = usePreviewImg();
   const imageRef = useRef(null);
-  const [remainingText, setRemainingText] = useState(MAX_CHAR);
+  const [remainingChar, setRemainingChar] = useState(MAX_CHAR);
   const user = useRecoilValue(userAtom);
   const showToast = useShowToast();
   const [loading, setLoading] = useState(false);
@@ -43,10 +43,10 @@ const CreatePost = () => {
     if (inputText.length > MAX_CHAR) {
       const truncatedText = inputText.slice(0, MAX_CHAR);
       setPostText(truncatedText);
-      setRemainingText(0);
+      setRemainingChar(0);
     } else {
       setPostText(inputText);
-      setRemainingText(MAX_CHAR - inputText.length);
+      setRemainingChar(MAX_CHAR - inputText.length);
     }
   };
 
@@ -55,19 +55,22 @@ const CreatePost = () => {
     try {
       const res = await fetch("/api/posts/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           postedBy: user._id,
           text: postText,
           img: imgUrl,
         }),
       });
+
       const data = await res.json();
       if (data.error) {
         showToast("Error", data.error, "error");
         return;
       }
-      showToast("Success", "Post Created Successfully", "success");
+      showToast("Success", "Post created successfully", "success");
       onClose();
       setPostText("");
       setImgUrl("");
@@ -88,17 +91,19 @@ const CreatePost = () => {
         bg={useColorModeValue("gray.300", "gray.dark")}
         onClick={onOpen}
       >
-        Create Post
+        Post
       </Button>
+
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
+
         <ModalContent>
           <ModalHeader>Create Post</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl>
               <Textarea
-                placeholder="Your post content goes here..."
+                placeholder="Post content goes here.."
                 onChange={handleTextChange}
                 value={postText}
               />
@@ -109,29 +114,29 @@ const CreatePost = () => {
                 m={"1"}
                 color={"gray.800"}
               >
-                {" "}
-                {remainingText}/{MAX_CHAR}
+                {remainingChar}/{MAX_CHAR}
               </Text>
+
               <Input
                 type="file"
                 hidden
                 ref={imageRef}
                 onChange={handleImageChange}
               />
+
               <BsFillImageFill
                 style={{ marginLeft: "5px", cursor: "pointer" }}
                 size={16}
-                onClick={() => {
-                  imageRef.current.click();
-                }}
+                onClick={() => imageRef.current.click()}
               />
             </FormControl>
+
             {imgUrl && (
               <Flex mt={5} w={"full"} position={"relative"}>
-                <Image src={imgUrl} alt="Selected Image" />
+                <Image src={imgUrl} alt="Selected img" />
                 <CloseButton
                   onClick={() => {
-                    setImgUrl(null);
+                    setImgUrl("");
                   }}
                   bg={"gray.800"}
                   position={"absolute"}
@@ -151,7 +156,6 @@ const CreatePost = () => {
             >
               Post
             </Button>
-            <Button variant="ghost">Secondary Action</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

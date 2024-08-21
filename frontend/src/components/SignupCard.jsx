@@ -1,4 +1,3 @@
-"use client";
 import {
   Flex,
   Box,
@@ -25,26 +24,32 @@ import userAtom from "../atoms/userAtom";
 export default function SignupCard() {
   const [showPassword, setShowPassword] = useState(false);
   const setAuthScreen = useSetRecoilState(authScreenAtom);
-  const showToast = useShowToast();
-  const setUser = useSetRecoilState(userAtom);
   const [inputs, setInputs] = useState({
     name: "",
     username: "",
     email: "",
     password: "",
   });
-  const handleSignUp = async () => {
+
+  const showToast = useShowToast();
+  const setUser = useSetRecoilState(userAtom);
+
+  const handleSignup = async () => {
     try {
       const res = await fetch("/api/users/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(inputs),
       });
       const data = await res.json();
+
       if (data.error) {
         showToast("Error", data.error, "error");
         return;
       }
+
       localStorage.setItem("user-threads", JSON.stringify(data));
       setUser(data);
     } catch (error) {
@@ -70,7 +75,7 @@ export default function SignupCard() {
             <HStack>
               <Box>
                 <FormControl isRequired>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel>Full name</FormLabel>
                   <Input
                     type="text"
                     onChange={(e) =>
@@ -134,7 +139,7 @@ export default function SignupCard() {
                 _hover={{
                   bg: useColorModeValue("gray.700", "gray.800"),
                 }}
-                onClick={handleSignUp}
+                onClick={handleSignup}
               >
                 Sign up
               </Button>
@@ -142,12 +147,7 @@ export default function SignupCard() {
             <Stack pt={6}>
               <Text align={"center"}>
                 Already a user?{" "}
-                <Link
-                  color={"blue.400"}
-                  onClick={() => {
-                    setAuthScreen("login");
-                  }}
-                >
+                <Link color={"blue.400"} onClick={() => setAuthScreen("login")}>
                   Login
                 </Link>
               </Text>

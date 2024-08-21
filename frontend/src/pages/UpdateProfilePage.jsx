@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Button,
   Flex,
@@ -24,14 +22,16 @@ export default function UpdateProfilePage() {
     name: user.name,
     username: user.username,
     email: user.email,
-    profilePic: user.profilePic,
     bio: user.bio,
     password: "",
   });
   const fileRef = useRef(null);
   const [updating, setUpdating] = useState(false);
-  const { handleImageChange, imgUrl } = usePreviewImg();
+
   const showToast = useShowToast();
+
+  const { handleImageChange, imgUrl } = usePreviewImg();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (updating) return;
@@ -39,15 +39,17 @@ export default function UpdateProfilePage() {
     try {
       const res = await fetch(`/api/users/update/${user._id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ ...inputs, profilePic: imgUrl }),
       });
-      const data = await res.json();
+      const data = await res.json(); // updated user object
       if (data.error) {
         showToast("Error", data.error, "error");
         return;
       }
-      showToast("Success", "Profile Updated Succesfully", "success");
+      showToast("Success", "Profile updated successfully", "success");
       setUser(data);
       localStorage.setItem("user-threads", JSON.stringify(data));
     } catch (error) {
@@ -74,7 +76,11 @@ export default function UpdateProfilePage() {
           <FormControl id="userName">
             <Stack direction={["column", "row"]} spacing={6}>
               <Center>
-                <Avatar size="xl" src={imgUrl || user.profilePic} />
+                <Avatar
+                  size="xl"
+                  boxShadow={"md"}
+                  src={imgUrl || user.profilePic}
+                />
               </Center>
               <Center w="full">
                 <Button w="full" onClick={() => fileRef.current.click()}>
@@ -90,56 +96,57 @@ export default function UpdateProfilePage() {
             </Stack>
           </FormControl>
           <FormControl>
-            <FormLabel>User name</FormLabel>
+            <FormLabel>Full name</FormLabel>
             <Input
-              placeholder="UserName"
+              placeholder="John Doe"
+              value={inputs.name}
+              onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
               _placeholder={{ color: "gray.500" }}
               type="text"
-              value={user.username}
-              onChange={(e) =>
-                setInputs({ ...inputs, username: e.target.value })
-              }
             />
           </FormControl>
           <FormControl>
-            <FormLabel>Full name</FormLabel>
+            <FormLabel>User name</FormLabel>
             <Input
-              placeholder="FullName"
+              placeholder="johndoe"
+              value={inputs.username}
+              onChange={(e) =>
+                setInputs({ ...inputs, username: e.target.value })
+              }
               _placeholder={{ color: "gray.500" }}
               type="text"
-              value={user.name}
-              onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
             />
           </FormControl>
           <FormControl>
             <FormLabel>Email address</FormLabel>
             <Input
               placeholder="your-email@example.com"
+              value={inputs.email}
+              onChange={(e) => setInputs({ ...inputs, email: e.target.value })}
               _placeholder={{ color: "gray.500" }}
               type="email"
-              value={user.email}
-              onChange={(e) => setInputs({ ...inputs, email: e.target.value })}
             />
           </FormControl>
           <FormControl>
             <FormLabel>Bio</FormLabel>
             <Input
-              placeholder="Your Bio..."
+              placeholder="Your bio."
+              value={inputs.bio}
+              onChange={(e) => setInputs({ ...inputs, bio: e.target.value })}
               _placeholder={{ color: "gray.500" }}
               type="text"
-              value={user.bio}
-              onChange={(e) => setInputs({ ...inputs, bio: e.target.value })}
             />
           </FormControl>
           <FormControl>
             <FormLabel>Password</FormLabel>
             <Input
               placeholder="password"
-              _placeholder={{ color: "gray.500" }}
-              type="password"
+              value={inputs.password}
               onChange={(e) =>
                 setInputs({ ...inputs, password: e.target.value })
               }
+              _placeholder={{ color: "gray.500" }}
+              type="password"
             />
           </FormControl>
           <Stack spacing={6} direction={["column", "row"]}>

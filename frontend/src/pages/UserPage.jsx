@@ -33,13 +33,12 @@ const UserPage = () => {
 
   if (!user && loading) {
     return (
-      <Flex>
-        <Spinner size="xl" />
+      <Flex justifyContent={"center"}>
+        <Spinner size={"xl"} />
       </Flex>
     );
   }
-
-  if (!user && !loading) return <h1>User Not Found!</h1>;
+  if (!user && !loading) return <h1>User not found</h1>;
 
   return (
     <>

@@ -99,7 +99,6 @@ const Actions = ({ post: post_ }) => {
             strokeWidth="2"
           ></path>
         </svg>
-        {/* <CommentSVG /> */}
         <svg
           aria-label="Comment"
           color=""

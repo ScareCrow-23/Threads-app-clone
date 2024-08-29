@@ -1,34 +1,19 @@
 import { useEffect, useState } from "react";
 import UserHeader from "../components/UserHeader";
-import Post from "../components/Post";
 import { useParams } from "react-router-dom";
 import useShowToast from "../hooks/useShowToast";
 import { Flex, Spinner } from "@chakra-ui/react";
+import Post from "../components/Post";
+import useGetUserProfile from "../hooks/useGetUserProfile";
 
 const UserPage = () => {
-  const [user, setUser] = useState(null);
+  const { user, loading } = useGetUserProfile();
   const { username } = useParams();
   const showToast = useShowToast();
-  const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState([]);
   const [fetchingPosts, setFetchingPosts] = useState(true);
 
   useEffect(() => {
-    const getUser = async () => {
-      try {
-        const res = await fetch(`/api/users/profile/${username}`);
-        const data = await res.json();
-        if (data.error) {
-          showToast("Error", data.error, "error");
-          return;
-        }
-        setUser(data);
-      } catch (error) {
-        showToast("Error", error.message, "error");
-      } finally {
-        setLoading(false);
-      }
-    };
     const getPosts = async () => {
       setFetchingPosts(true);
       try {
@@ -36,10 +21,6 @@ const UserPage = () => {
         const data = await res.json();
         console.log(data);
         setPosts(data);
-        // if (data.error) {
-        //   showToast("Error", data.error, "error");
-        //   return;
-        // }
       } catch (error) {
         showToast("Error", error.message, "error");
         setPosts([]);
@@ -47,7 +28,7 @@ const UserPage = () => {
         setFetchingPosts(false);
       }
     };
-    getUser();
+
     getPosts();
   }, [username, showToast]);
 
@@ -63,14 +44,14 @@ const UserPage = () => {
   return (
     <>
       <UserHeader user={user} />
-      {!fetchingPosts && postMessage.length === 0 && (
-        <h1>User has no Posts to show.</h1>
-      )}
+
+      {!fetchingPosts && posts.length === 0 && <h1>User has not posts.</h1>}
       {fetchingPosts && (
         <Flex justifyContent={"center"} my={12}>
           <Spinner size={"xl"} />
         </Flex>
       )}
+
       {posts.map((post) => (
         <Post key={post._id} post={post} postedBy={post.postedBy} />
       ))}

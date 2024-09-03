@@ -14,25 +14,30 @@ import {
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
-import { useRecoilValue } from "recoil";
+import { useState } from "react";
+import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import useShowToast from "../hooks/useShowToast";
-import { useState } from "react";
+import postsAtom from "../atoms/postsAtom";
 
-const Actions = ({ post: post_ }) => {
+const Actions = ({ post }) => {
   const user = useRecoilValue(userAtom);
-  const [liked, setLiked] = useState(post_.likes.includes(user?._id));
-  const [post, setPost] = useState(post_);
+  const [liked, setLiked] = useState(post.likes.includes(user?._id));
+  const [posts, setPosts] = useRecoilState(postsAtom);
   const [isLiking, setIsLiking] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
   const [reply, setReply] = useState("");
-  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const showToast = useShowToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   const handleLikeAndUnlike = async () => {
-    if (!user) return showToast("Error", "You must be logged in", "error");
-    if (isReplying) return;
-    setIsReplying(true);
+    if (!user)
+      return showToast(
+        "Error",
+        "You must be logged in to like a post",
+        "error"
+      );
     if (isLiking) return;
     setIsLiking(true);
     try {
@@ -44,24 +49,44 @@ const Actions = ({ post: post_ }) => {
       });
       const data = await res.json();
       if (data.error) return showToast("Error", data.error, "error");
+
       if (!liked) {
-        // add the id of user to post.liked array
-        setPost({ ...post, likes: [...post.likes, user._id] });
+        // add the id of the current user to post.likes array
+        const updatedPosts = posts.map((p) => {
+          if (p._id === post._id) {
+            return { ...p, likes: [...p.likes, user._id] };
+          }
+          return p;
+        });
+        setPosts(updatedPosts);
       } else {
-        // remove the id of user from post.liked array
-        setPost({ ...post, likes: post.likes.filter((id) => id !== user._id) });
+        // remove the id of the current user from post.likes array
+        const updatedPosts = posts.map((p) => {
+          if (p._id === post._id) {
+            return { ...p, likes: p.likes.filter((id) => id !== user._id) };
+          }
+          return p;
+        });
+        setPosts(updatedPosts);
       }
+
       setLiked(!liked);
     } catch (error) {
-      showToast("Error", error, "error");
+      showToast("Error", error.message, "error");
     } finally {
       setIsLiking(false);
-      setIsReplying(false);
     }
   };
 
   const handleReply = async () => {
-    if (!user) return showToast("Error", "You Must be logged in", "error");
+    if (!user)
+      return showToast(
+        "Error",
+        "You must be logged in to reply to a post",
+        "error"
+      );
+    if (isReplying) return;
+    setIsReplying(true);
     try {
       const res = await fetch("/api/posts/reply/" + post._id, {
         method: "PUT",
@@ -72,16 +97,26 @@ const Actions = ({ post: post_ }) => {
       });
       const data = await res.json();
       if (data.error) return showToast("Error", data.error, "error");
-      setPost({ ...post, replies: [...post.replies, data.reply] });
-      showToast("Success", "Reply Posted Succesfully", "success");
+
+      const updatedPosts = posts.map((p) => {
+        if (p._id === post._id) {
+          return { ...p, replies: [...p.replies, data] };
+        }
+        return p;
+      });
+      setPosts(updatedPosts);
+      showToast("Success", "Reply posted successfully", "success");
       onClose();
       setReply("");
     } catch (error) {
-      showToast("Error", error, "error");
+      showToast("Error", error.message, "error");
+    } finally {
+      setIsReplying(false);
     }
   };
+
   return (
-    <Flex flexDirection={"column"}>
+    <Flex flexDirection="column">
       <Flex gap={3} my={2} onClick={(e) => e.preventDefault()}>
         <svg
           aria-label="Like"
@@ -99,6 +134,7 @@ const Actions = ({ post: post_ }) => {
             strokeWidth="2"
           ></path>
         </svg>
+
         <svg
           aria-label="Comment"
           color=""
@@ -118,9 +154,11 @@ const Actions = ({ post: post_ }) => {
             strokeWidth="2"
           ></path>
         </svg>
+
         <RepostSVG />
         <ShareSVG />
       </Flex>
+
       <Flex gap={2} alignItems={"center"}>
         <Text color={"gray.light"} fontSize="sm">
           {post.replies.length} replies
@@ -130,6 +168,7 @@ const Actions = ({ post: post_ }) => {
           {post.likes.length} likes
         </Text>
       </Flex>
+
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -138,7 +177,7 @@ const Actions = ({ post: post_ }) => {
           <ModalBody pb={6}>
             <FormControl>
               <Input
-                placeholder="Your Reply Here..."
+                placeholder="Reply goes here.."
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
               />
@@ -149,8 +188,8 @@ const Actions = ({ post: post_ }) => {
             <Button
               colorScheme="blue"
               size={"sm"}
-              isLoading={isReplying}
               mr={3}
+              isLoading={isReplying}
               onClick={handleReply}
             >
               Reply
@@ -185,32 +224,34 @@ const RepostSVG = () => {
 };
 
 const ShareSVG = () => {
-  <svg
-    aria-label="Share"
-    color=""
-    fill="rgb(243, 245, 247)"
-    height="20"
-    role="img"
-    viewBox="0 0 24 24"
-    width="20"
-  >
-    <title>Share</title>
-    <line
-      fill="none"
-      stroke="currentColor"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      x1="22"
-      x2="9.218"
-      y1="3"
-      y2="10.083"
-    ></line>
-    <polygon
-      fill="none"
-      points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"
-      stroke="currentColor"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    ></polygon>
-  </svg>;
+  return (
+    <svg
+      aria-label="Share"
+      color=""
+      fill="rgb(243, 245, 247)"
+      height="20"
+      role="img"
+      viewBox="0 0 24 24"
+      width="20"
+    >
+      <title>Share</title>
+      <line
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        x1="22"
+        x2="9.218"
+        y1="3"
+        y2="10.083"
+      ></line>
+      <polygon
+        fill="none"
+        points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      ></polygon>
+    </svg>
+  );
 };

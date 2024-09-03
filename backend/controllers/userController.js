@@ -1,4 +1,5 @@
 import User from "../models/userModel.js";
+import Post from "../models/postModel.js";
 import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookies.js";
 import { v2 as cloudinary } from "cloudinary";
@@ -124,18 +125,17 @@ const followUnFollowUser = async (req, res) => {
     if (!userToModify || !currentUser)
       return res.status(400).json({ error: "User not found" });
 
-    console.log(currentUser);
     const isFollowing = currentUser.followings.includes(id);
 
     if (isFollowing) {
       // Unfollow user
       await User.findByIdAndUpdate(id, { $pull: { followers: req.user._id } });
-      await User.findByIdAndUpdate(req.user._id, { $pull: { followings: id } });
+      await User.findByIdAndUpdate(req.user._id, { $pull: { following: id } });
       res.status(200).json({ message: "User unfollowed successfully" });
     } else {
       // Follow user
       await User.findByIdAndUpdate(id, { $push: { followers: req.user._id } });
-      await User.findByIdAndUpdate(req.user._id, { $push: { followings: id } });
+      await User.findByIdAndUpdate(req.user._id, { $push: { following: id } });
       res.status(200).json({ message: "User followed successfully" });
     }
   } catch (err) {
@@ -182,6 +182,18 @@ const updateUser = async (req, res) => {
     user.bio = bio || user.bio;
 
     user = await user.save();
+
+    // Find all posts that this user replied and update username and userProfilePic fields
+    await Post.updateMany(
+      { "replies.userId": userId },
+      {
+        $set: {
+          "replies.$[reply].username": user.username,
+          "replies.$[reply].userProfilePic": user.profilePic,
+        },
+      },
+      { arrayFilters: [{ "reply.userId": userId }] }
+    );
 
     // password should be null in response
     user.password = null;

@@ -29,6 +29,7 @@ const PostPage = () => {
   const navigate = useNavigate();
 
   const currentPost = posts[0];
+
   useEffect(() => {
     const getPost = async () => {
       setPosts([]);
@@ -75,6 +76,7 @@ const PostPage = () => {
   }
 
   if (!currentPost) return null;
+  console.log("currentPost", currentPost);
 
   return (
     <>

@@ -23,20 +23,23 @@ const userSchema = mongoose.Schema(
     },
     profilePic: {
       type: String,
-      default:
-        "https://static.vecteezy.com/system/resources/thumbnails/001/840/618/small/picture-profile-icon-male-icon-human-or-people-sign-and-symbol-free-vector.jpg",
+      default: "",
     },
     followers: {
       type: [String],
       default: [],
     },
-    followings: {
+    following: {
       type: [String],
       default: [],
     },
     bio: {
       type: String,
       default: "",
+    },
+    isFrozen: {
+      type: Boolean,
+      default: false,
     },
   },
   {

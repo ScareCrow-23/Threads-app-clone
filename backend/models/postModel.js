@@ -15,6 +15,7 @@ const postSchema = mongoose.Schema(
       type: String,
     },
     likes: {
+      // array of user ids
       type: [mongoose.Schema.Types.ObjectId],
       ref: "User",
       default: [],
@@ -29,7 +30,6 @@ const postSchema = mongoose.Schema(
         text: {
           type: String,
           required: true,
-          maxLength: 500,
         },
         userProfilePic: {
           type: String,
@@ -40,7 +40,9 @@ const postSchema = mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 const Post = mongoose.model("Post", postSchema);

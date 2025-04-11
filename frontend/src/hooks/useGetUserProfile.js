@@ -6,7 +6,8 @@ const useGetUserProfile = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const { username } = useParams();
-  const showToast = useShowToast(username);
+  const showToast = useShowToast();
+
   useEffect(() => {
     const getUser = async () => {
       try {
@@ -14,6 +15,10 @@ const useGetUserProfile = () => {
         const data = await res.json();
         if (data.error) {
           showToast("Error", data.error, "error");
+          return;
+        }
+        if (data.isFrozen) {
+          setUser(null);
           return;
         }
         setUser(data);
@@ -25,6 +30,7 @@ const useGetUserProfile = () => {
     };
     getUser();
   }, [username, showToast]);
+
   return { loading, user };
 };
 
